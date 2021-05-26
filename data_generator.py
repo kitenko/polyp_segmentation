@@ -13,7 +13,7 @@ from config import BATCH_SIZE, INPUT_SHAPE_IMAGE, JSON_FILE_PATH, NUMBER_CLASSES
 
 class DataGenerator(keras.utils.Sequence):
     def __init__(self, batch_size: int = BATCH_SIZE, image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE,
-                 is_train: bool = False, json_path: str = JSON_FILE_PATH, num_classes: int = NUMBER_CLASSES,
+                 is_train: bool = True, json_path: str = JSON_FILE_PATH, num_classes: int = NUMBER_CLASSES,
                  augmentation_data: bool = AUGMENTATION_DATA) -> None:
         """
         Data generator for the task of semantic segmentation.
@@ -30,19 +30,19 @@ class DataGenerator(keras.utils.Sequence):
         self.batch_size = batch_size
         self.image_shape = image_shape
         self.num_classes = num_classes
-        self.augmentation_data = augmentation_data
+        self.is_train = is_train
 
         # read json
         with open(json_path) as f:
             self.data = json.load(f)
 
         # augmentation data
-        if is_train:
+        if self.is_train:
             self.data = self.data['train']
-            augmentation = augmentation_images(train_data=self.augmentation_data)
+            augmentation = self.augmentation_images(augmentation_data)
         else:
             self.data = self.data['test']
-            augmentation = augmentation_images(train_data=False)
+            augmentation = self.augmentation_images()
 
         self.aug = augmentation
         self.on_epoch_end()
@@ -87,23 +87,43 @@ class DataGenerator(keras.utils.Sequence):
         for i in range(len(self)):
             batch = self[i]
 
-        images, masks = batch[0], batch[1]
-        fontsize = 8
-        for i, j in enumerate(images):
-            mask_background = masks[i, :, :, -1]
-            mask_object = masks[i, :, :, 0]
-            plt.figure(figsize=[10, 10])
-            f, ax = plt.subplots(3, 1)
-            ax[0].imshow(j)
-            ax[0].set_title('Original image', fontsize=fontsize)
-            ax[1].imshow(mask_object)
-            ax[1].set_title('Mask dog or cat', fontsize=fontsize)
-            ax[2].imshow(mask_background)
-            ax[2].set_title('Mask background', fontsize=fontsize)
-            if plt.waitforbuttonpress(0):
-                plt.close('all')
-                raise SystemExit
-            plt.close()
+            images, masks = batch[0], batch[1]
+            fontsize = 8
+            for i, j in enumerate(images):
+                mask_background = masks[i, :, :, -1]
+                mask_object = masks[i, :, :, 0]
+                plt.figure(figsize=[10, 10])
+                f, ax = plt.subplots(3, 1)
+                ax[0].imshow(j)
+                ax[0].set_title('Original image', fontsize=fontsize)
+                ax[1].imshow(mask_object)
+                ax[1].set_title('Mask dog or cat', fontsize=fontsize)
+                ax[2].imshow(mask_background)
+                ax[2].set_title('Mask background', fontsize=fontsize)
+                if plt.waitforbuttonpress(0):
+                    plt.close('all')
+                    raise SystemExit
+                plt.close()
+
+    def augmentation_images(self, augm: bool = False) -> A.Compose:
+        """
+        This function makes augmentation data.
+
+        :return: augment data
+        """
+        if augm is True:
+            aug = A.Compose([
+                A.Resize(height=self.image_shape[1], width=self.image_shape[0]),
+                A.Blur(p=0.3),
+                A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.0, hue=0.0, always_apply=False, p=0.2),
+                A.GaussNoise(var_limit=(10.0, 50.0), mean=0, always_apply=False, p=0.4),
+                A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=5, val_shift_limit=5, always_apply=True,
+                                     p=0.2)
+            ])
+        else:
+            aug = A.Compose([A.Resize(height=self.image_shape[1], width=self.image_shape[0])])
+
+        return aug
 
 
 def image_normalization(image: np.ndarray) -> np.ndarray:
@@ -113,28 +133,6 @@ def image_normalization(image: np.ndarray) -> np.ndarray:
     :return: normalized image.
     """
     return image / 255.0
-
-
-def augmentation_images(train_data: bool = False) -> A.Compose:
-    """
-    This function makes augmentation data.
-
-    :param train_data: if this parameter is True then augmentation is applied to train dataset.
-    :return: augment data
-    """
-    if train_data is True:
-        aug = A.Compose([
-            A.Resize(height=INPUT_SHAPE_IMAGE[1], width=INPUT_SHAPE_IMAGE[0]),
-            A.Blur(p=0.3),
-            A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2, always_apply=False, p=0.5),
-            A.GaussNoise(var_limit=(10.0, 50.0), mean=0, always_apply=False, p=0.5),
-            A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, always_apply=False,
-                                 p=0.5)
-            ])
-    else:
-        aug = A.Compose([A.Resize(height=INPUT_SHAPE_IMAGE[1], width=INPUT_SHAPE_IMAGE[0])])
-
-    return aug
 
 
 if __name__ == '__main__':
