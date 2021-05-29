@@ -3,12 +3,12 @@ from datetime import datetime
 
 date_time_for_save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
-BATCH_SIZE = 4
+BATCH_SIZE = 8
 NUMBER_CLASSES = 2
-INPUT_SHAPE_IMAGE = (512, 512, 3)
-PROPORTION_TEST_IMAGES = 0.15
-EPOCHS = 150
-AUGMENTATION_DATA = False
+INPUT_SHAPE_IMAGE = (256, 256, 3)
+PROPORTION_TEST_IMAGES = 0.2
+EPOCHS = 1000
+AUGMENTATION_DATA = True
 
 DATA_PATH = 'data'
 JSON_FILE_PATH = os.path.join(DATA_PATH, 'data.json')
@@ -16,7 +16,7 @@ IMAGES_PATH = os.path.join(DATA_PATH, 'images')
 MASKS_PATH = os.path.join(DATA_PATH, 'masks')
 
 LEARNING_RATE = 0.0001
-BACKBONE = 'efficientnetb0'
+BACKBONE = 'mobilenetv2'
 ENCODER_WEIGHTS = 'imagenet'
 ACTIVATION = 'softmax'
 NAME_MODEL = 'Unet'

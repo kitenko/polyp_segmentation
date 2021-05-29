@@ -49,7 +49,7 @@ def train(dataset_path_json: str, input_shape_image: Tuple[int, int, int] = INPU
                            sm.metrics.f1_score]
                   )
     model.summary()
-    early = EarlyStopping(monitor='loss', min_delta=0, patience=10, verbose=1, mode='auto')
+    early = EarlyStopping(monitor='loss', min_delta=0, patience=50, verbose=1, mode='auto')
     checkpoint_filepath = os.path.join(SAVE_CURRENT_MODEL, FULL_NAME_MODEL + '_' + str(input_shape_image) + '.h5')
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
