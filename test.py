@@ -58,17 +58,24 @@ def visualization() -> None:
     if not cap.isOpened():
         print("Error opening video stream or file")
 
+    prev_frame_time = 0
+
     while cap.isOpened():
-        # Capture frame-by-frame
         ret, frame = cap.read()
-        if ret:
-            # Display the resulting frame
-            cv2.resize(frame, (INPUT_SHAPE_IMAGE[1], INPUT_SHAPE_IMAGE[0]))
-            image = preparing_frame(image=frame, model=model)
-            image = cv2.resize(image, (720, 720))
-            cv2.imshow('frame', image)
-            if cv2.waitKey(1) == ord('q'):
-                break
+
+        if not ret:
+            break
+
+        cv2.resize(frame, (INPUT_SHAPE_IMAGE[1], INPUT_SHAPE_IMAGE[0]))
+        image = preparing_frame(image=frame, model=model)
+        image = cv2.resize(image, (720, 720))
+        new_frame_time = time.time()
+        fps = 1 / (new_frame_time - prev_frame_time)
+        prev_frame_time = new_frame_time
+        cv2.putText(image, str(int(fps)) + ':fps', (150, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        cv2.imshow('frame', image)
+        if cv2.waitKey(1) == ord('q'):
+            break
     cap.release()
     cv2.destroyAllWindows()
 
@@ -108,7 +115,6 @@ if __name__ == '__main__':
     args = parse_args()
 
     if args.gpu is True:
-        os.environ['CUDA_VISIBLE_DEVICES'] = '1'
         devices = tf.config.experimental.list_physical_devices('GPU')
         tf.config.experimental.set_memory_growth(devices[0], True)
 
