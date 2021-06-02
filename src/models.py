@@ -3,12 +3,12 @@ from typing import Tuple
 import tensorflow as tf
 import segmentation_models as sm
 
-from config import BACKBONE, NUMBER_CLASSES, ACTIVATION, INPUT_SHAPE_IMAGE, ENCODER_WEIGHTS, NAME_MODEL
+from config import BACKBONE, NUMBER_CLASSES, OUTPUT_ACTIVATION, INPUT_SHAPE_IMAGE, ENCODER_WEIGHTS, MODEL_NAME
 
 
-def build_model(backbone_name: str = BACKBONE, num_classes: int = NUMBER_CLASSES, activation: str = ACTIVATION,
+def build_model(backbone_name: str = BACKBONE, num_classes: int = NUMBER_CLASSES, activation: str = OUTPUT_ACTIVATION,
                 image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE, encoder_weights: str = ENCODER_WEIGHTS,
-                name_model: str = NAME_MODEL) -> tf.keras.models.Model:
+                name_model: str = MODEL_NAME) -> tf.keras.models.Model:
     """
     This function builds model based on the input parameters.
 
@@ -19,7 +19,7 @@ def build_model(backbone_name: str = BACKBONE, num_classes: int = NUMBER_CLASSES
     :param image_shape: this is image shape (height, width, channels).
     :param encoder_weights: one of None (random initialization), imagenet (pre-training on ImageNet).
     :param name_model: name model(Unet, Linknet, PSPNet, FPN).
-    :return: tf.keras.models.Model.
+    :return: tf.keras.experimental_model.Model.
     """
     try:
         if name_model == 'Unet':
