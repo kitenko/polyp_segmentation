@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import argparse
 
 import cv2
 
@@ -50,5 +51,18 @@ def prepare_data(masks_path: str = MASKS_PATH, proportion_test_images: float = P
         json.dump(train_test_json, f, indent=4)
 
 
+def parse_args() -> argparse.Namespace:
+    """
+    Parsing command line arguments with argparse.
+    """
+    parser = argparse.ArgumentParser('script for model testing.')
+    parser.add_argument('--data_path', nargs='?', default=None, const='data', help='path to Dataset')
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    prepare_data()
+    args = parse_args()
+
+    prepare_data(json_file_path=os.path.join(args.data_path, JSON_FILE_PATH),
+                 images_path=os.path.join(args.data_path, IMAGES_PATH),
+                 masks_path=os.path.join(args.data_path, MASKS_PATH))
