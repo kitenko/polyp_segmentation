@@ -8,26 +8,9 @@ import numpy as np
 import tensorflow as tf
 import segmentation_models as sm
 
-from models import build_model
 from config import INPUT_SHAPE_IMAGE, JSON_FILE_PATH
-from data_generator import DataGenerator
-
-
-def parse_args() -> argparse.Namespace:
-    """
-    Parsing command line arguments with argparse.
-    """
-    parser = argparse.ArgumentParser('script for model testing.')
-    parser.add_argument('--weights', type=str, default=None, help='Path for loading model weights.')
-    parser.add_argument('--path_video', type=str, default=None, help='Path for loading video for test.')
-    parser.add_argument('--test_on_video', action='store_true', help='If the value is True, then the webcam will be '
-                                                                     'used for the test.')
-    parser.add_argument('--metrics', action='store_true', help='If the value is True, then the average '
-                                                               'metrics on the validation dataset will be calculated.')
-    parser.add_argument('--time', action='store_true', help='If the value is True, then the inference time and the '
-                                                            'average fps on the validation dataset will be calculated.')
-    parser.add_argument('--gpu', action='store_true', help='If True, then the gpu is used for the test.')
-    return parser.parse_args()
+from src import build_model
+from src import DataGenerator
 
 
 def preparing_frame(image: np.ndarray, model) -> np.ndarray:
@@ -86,7 +69,7 @@ def test_metrics_and_time(mode: str) -> None:
 
     :param mode: depending on the mode ('metrics', 'time'), the function counts (loss, metrics) or time and average fps.
     """
-    data_gen = DataGenerator(batch_size=1, json_path=JSON_FILE_PATH, is_train=False)
+    data_gen = DataGenerator(batch_size=1, json_path=os.path.join(args.data_path, JSON_FILE_PATH), is_train=False)
     model = build_model()
     model.load_weights(args.weights)
     model.compile(loss=tf.keras.losses.binary_crossentropy, metrics=[
@@ -109,6 +92,24 @@ def test_metrics_and_time(mode: str) -> None:
             np.mean(all_times),
             len(all_times) / sum(all_times))
         print(message)
+
+
+def parse_args() -> argparse.Namespace:
+    """
+    Parsing command line arguments with argparse.
+    """
+    parser = argparse.ArgumentParser('script for model testing.')
+    parser.add_argument('--weights', type=str, default=None, help='Path for loading model weights.')
+    parser.add_argument('--path_video', type=str, default=None, help='Path for loading video for test.')
+    parser.add_argument('--test_on_video', action='store_true', help='If the value is True, then the webcam will be '
+                                                                     'used for the test.')
+    parser.add_argument('--metrics', action='store_true', help='If the value is True, then the average '
+                                                               'metrics on the validation dataset will be calculated.')
+    parser.add_argument('--time', action='store_true', help='If the value is True, then the inference time and the '
+                                                            'average fps on the validation dataset will be calculated.')
+    parser.add_argument('--gpu', action='store_true', help='If True, then the gpu is used for the test.')
+    parser.add_argument('--data_path', type=str, default='data', help='path to Dataset where there is a json file')
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
