@@ -63,7 +63,7 @@ def parse_args() -> argparse.Namespace:
     """
     Parsing command line arguments with argparse.
     """
-    parser = argparse.ArgumentParser('script for model testing.')
+    parser = argparse.ArgumentParser('script for model train.')
     parser.add_argument('--train', default=False, action='store_true',
                         help='if you use this flag, then the training will be performed automatically with input shape'
                              '(256*256*3))')
