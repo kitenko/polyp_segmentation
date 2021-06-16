@@ -5,18 +5,18 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (Conv2D, MaxPooling2D, UpSampling2D, Add, BatchNormalization, Input, Activation,
                                      Concatenate, ZeroPadding2D)
 
-from config import INPUT_SHAPE_IMAGE
+from config import INPUT_SHAPE_IMAGE, LAYER_ACTIVATION, OUTPUT_ACTIVATION
 
 
 class UnetResnet18:
-    def __init__(self, input_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE, n_class_mask: int = 2,
-                 final_activation: str = 'softmax', kernel_initializer_conv2d: str = 'HeUniform',
+    def __init__(self, image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE, n_class_mask: int = 2,
+                 final_activation: str = OUTPUT_ACTIVATION, kernel_initializer_conv2d: str = 'HeUniform',
                  epsilon_batch: float = 0.00002, initial_filters: int = 64,
-                 activation: str = 'swish', depth: int = 4) -> None:
+                 activation: str = LAYER_ACTIVATION, depth: int = 4) -> None:
         """
         Build UNet model with ResBlock.
 
-        :param input_shape: Input image size.
+        :param image_shape: Input image size.
         :param n_class_mask: How many classes in the output layer. Defaults to 2.
         :param initial_filters: Number of filters to start with in first convolution.
         :param depth: How deep to go in UNet i.e. how many down and up sampling you want to do in the model.
@@ -24,7 +24,7 @@ class UnetResnet18:
         :param activation: activation to use in each convolution. Defaults to 'relu'.
         :param final_activation: activation for output layer. Defaults to 'softmax'.
         """
-        self.input_shape = input_shape
+        self.input_shape = image_shape
         self.n_class_mask = n_class_mask
         self.initial_filters = initial_filters
         self.depth = depth
