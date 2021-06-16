@@ -1,4 +1,6 @@
+import os
 import json
+import argparse
 from typing import Tuple
 
 import cv2
@@ -12,9 +14,9 @@ from config import BATCH_SIZE, INPUT_SHAPE_IMAGE, JSON_FILE_PATH, NUMBER_CLASSES
 
 
 class DataGenerator(keras.utils.Sequence):
-    def __init__(self, batch_size: int = BATCH_SIZE, image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE,
-                 is_train: bool = True, json_path: str = JSON_FILE_PATH, num_classes: int = NUMBER_CLASSES,
-                 augmentation_data: bool = AUGMENTATION_DATA) -> None:
+    def __init__(self, data_path: str, batch_size: int = BATCH_SIZE, json_name: str = JSON_FILE_PATH,
+                 image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE, is_train: bool = True,
+                 num_classes: int = NUMBER_CLASSES, augmentation_data: bool = AUGMENTATION_DATA) -> None:
         """
         Data generator for the task of semantic segmentation.
 
@@ -22,7 +24,7 @@ class DataGenerator(keras.utils.Sequence):
         :param batch_size: number of images in one batch.
         :param image_shape: this is image shape (height, width, channels).
         :param is_train: if is_train = True, then we work with train images, otherwise with test.
-        :param json_path: this is path for json file.
+        :param json_name: this is name json file.
         :param num_classes: number of classes.
         :param augmentation_data: if this parameter is True, then augmentation is applied to the training dataset.
         """
@@ -33,7 +35,7 @@ class DataGenerator(keras.utils.Sequence):
         self.is_train = is_train
 
         # read json
-        with open(json_path) as f:
+        with open(os.path.join(data_path, json_name)) as f:
             self.data = json.load(f)
 
         # augmentation data
@@ -69,7 +71,8 @@ class DataGenerator(keras.utils.Sequence):
         masks = np.zeros((self.batch_size, self.image_shape[1], self.image_shape[0], self.num_classes))
         for i, image_dict in enumerate(batch):
             img = cv2.imread(image_dict['image_path'])
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            if os.path.basename(image_dict['image_path']).split('.')[-1] == 'png' or 'jpg':
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             mask_image = cv2.imread(image_dict['mask_path'], 0)
             augmented = self.aug(image=img, mask=mask_image)
             img = augmented['image']
@@ -135,6 +138,16 @@ def image_normalization(image: np.ndarray) -> np.ndarray:
     return image / 255.0
 
 
+def parse_args() -> argparse.Namespace:
+    """
+    Parsing command line arguments with argparse.
+    """
+    parser = argparse.ArgumentParser('script for model testing.')
+    parser.add_argument('-p', '--data_path', type=str, default='data', help='path to Dataset')
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    x = DataGenerator()
+    args = parse_args()
+    x = DataGenerator(data_path=args.data_path)
     x.show()
