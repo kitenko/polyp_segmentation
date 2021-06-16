@@ -1,4 +1,3 @@
-import os
 import time
 import argparse
 from tqdm import tqdm
@@ -8,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 import segmentation_models as sm
 
-from config import INPUT_SHAPE_IMAGE, JSON_FILE_PATH
+from config import INPUT_SHAPE_IMAGE
 from src import build_model
 from src import DataGenerator
 
@@ -69,7 +68,7 @@ def test_metrics_and_time(mode: str) -> None:
 
     :param mode: depending on the mode ('metrics', 'time'), the function counts (loss, metrics) or time and average fps.
     """
-    data_gen = DataGenerator(batch_size=1, json_path=os.path.join(args.data_path, JSON_FILE_PATH), is_train=False)
+    data_gen = DataGenerator(data_path=args.data_path, batch_size=1, json_name=args.json_name, is_train=False)
     model = build_model()
     model.load_weights(args.weights)
     model.compile(loss=tf.keras.losses.binary_crossentropy, metrics=[
@@ -109,6 +108,7 @@ def parse_args() -> argparse.Namespace:
                                                             'average fps on the validation dataset will be calculated.')
     parser.add_argument('--gpu', action='store_true', help='If True, then the gpu is used for the test.')
     parser.add_argument('--data_path', type=str, default='data', help='path to Dataset where there is a json file')
+    parser.add_argument('--json_name', type=str, default='data.json', help='path to Dataset where there is a json file')
     return parser.parse_args()
 
 
