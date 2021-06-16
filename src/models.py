@@ -35,7 +35,11 @@ def build_model(backbone_name: str = BACKBONE, num_classes: int = NUMBER_CLASSES
             model = sm.FPN(backbone_name=backbone_name, encoder_weights=encoder_weights, classes=num_classes,
                            activation=activation, input_shape=image_shape)
         else:
-            print('model name is wrong')
+            print('name_model wrong')
+            raise ValueError('ERROR!!!1')
     except ValueError:
-        raise
+        print('ERROR, Unet will be used')
+        model = sm.Unet(backbone_name=backbone_name, encoder_weights=encoder_weights, classes=num_classes,
+                        activation=activation, input_shape=image_shape)
+
     return model
