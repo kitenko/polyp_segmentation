@@ -9,9 +9,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 from config import (JSON_FILE_PATH, EPOCHS, LEARNING_RATE, SAVE_MODELS, INPUT_SHAPE_IMAGE, MODEL_NAME,
                     BACKBONE, LOGS)
-from src import build_model
-from src import DataGenerator
-from src import LogCallback
+from src import build_model, DataGenerator, LogCallback
 
 
 def train(data_path: str, input_shape_image: Tuple[int, int, int] = INPUT_SHAPE_IMAGE) -> None:
@@ -74,24 +72,24 @@ def parse_args() -> argparse.Namespace:
                              'input shape from (256*256*3) before (512*512*3)')
     parser.add_argument('--data_path', type=str, default='data', help='path to Dataset where there is a json file')
     parser.add_argument('--models_data', type=str, default='models_data', help='path for saving logs and models')
-    parser.add_argument('--gpu', type=int, default=0, help='which gpu to use in')
+    parser.add_argument('--gpu', type=str, default='_', help='If you want to use the GPU, you must specify the number '
+                                                             'of the video card that you want to use.')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
-    # # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    # # def func(gpu: Optional[int]) -> None:
-    # # GPU
-    # devices = tf.config.experimental.list_physical_devices('GPU')
-    # tf.config.set_visible_devices(devices[args.gpu], 'GPU')
-    # tf.config.experimental.set_memory_growth(devices[args.gpu], True)
-    # # NO GPU
-    # tf.config.set_visible_devices([], 'GPU')
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    DEVICES_TO_USE = [args.gpu]
-    devices = tf.config.experimental.list_physical_devices('GPU')
-    devices = [devices[i] for i in DEVICES_TO_USE]
+
+    if args.gpu != '_':
+        gpus_list = [int(args.gpu)]
+    else:
+        gpus_list = []
+    devices = tf.config.get_visible_devices('GPU')
+    devices = [devices[i] for i in gpus_list]
+    tf.config.set_visible_devices(devices, 'GPU')
+    for gpu in devices:
+        tf.config.experimental.set_memory_growth(gpu, True)
+
     if args.train is True:
         train(data_path=args.data_path, input_shape_image=INPUT_SHAPE_IMAGE)
 
