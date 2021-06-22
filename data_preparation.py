@@ -2,33 +2,33 @@ import os
 import json
 import random
 import argparse
+from typing import List
 
 import cv2
+from tqdm import tqdm
 
-from config import JSON_FILE_PATH, PROPORTION_TEST_IMAGES
+from config import DATASETS
 
 
-def prepare_data(data_path: str, proportion_test_images: float = PROPORTION_TEST_IMAGES) -> None:
+def prepare_data(datasets: List, data_path: str, proportion_test_images: float, json_name: str) -> None:
     """
+    :param json_name: Name for the json file.
+    :param datasets: Names of datasets that will be used to generate the json file.
     :param proportion_test_images: proportion of test images.
     :param data_path: path data.
     """
 
     path = []
-    for root, dirs, _ in os.walk(data_path):
-        for dir in dirs:
-            if dir == 'images':
-                path.append(os.path.join(root, dir))
-            elif dir == 'masks':
-                path.append(os.path.join(root, dir))
+    for i in datasets:
+        path.append(os.path.join(data_path, i, 'images'))
+        path.append(os.path.join(data_path, i, 'masks'))
 
-    # reading and shuffling files
     images = []
     for image_path in path:
         g = image_path.split('/')
         if 'images' in g:
-            for mask_path in os.listdir(image_path):
-                images.append(os.path.join(image_path, mask_path))
+            for img in os.listdir(image_path):
+                images.append(os.path.join(image_path, img))
 
     shuffle_images = random.sample(images, len(images))
 
@@ -36,15 +36,15 @@ def prepare_data(data_path: str, proportion_test_images: float = PROPORTION_TEST
     train_test_json = {'train': [], 'test': []}
 
     # filling in dictionary for json file
-    for j, image_path in enumerate(shuffle_images):
+    for j, image_path in tqdm(enumerate(shuffle_images)):
         try:
-            mask_path = image_path.replace('images', 'masks')
-            img_dict = {'image_path': image_path, 'mask_path': mask_path}
+            img = image_path.replace('images', 'masks')
+            img_dict = {'image_path': image_path, 'mask_path': img}
             if cv2.imread(image_path) is None:
                 print('broken image: ' + image_path)
                 continue
-            elif cv2.imread(mask_path) is None:
-                print('broken image: ' + mask_path)
+            elif cv2.imread(img) is None:
+                print('broken image: ' + img)
                 continue
             elif j < len(shuffle_images) * proportion_test_images:
                 train_test_json['test'].append(img_dict)
@@ -54,7 +54,7 @@ def prepare_data(data_path: str, proportion_test_images: float = PROPORTION_TEST
             print(' no mask for ', image_path)
 
     # write json file
-    with open(os.path.join(data_path, JSON_FILE_PATH), 'w') as f:
+    with open(os.path.join(data_path, json_name), 'w') as f:
         json.dump(train_test_json, f, indent=4)
 
 
@@ -64,10 +64,15 @@ def parse_args() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser('script for model testing.')
     parser.add_argument('-p', '--data_path', type=str, default='data', help='path to Dataset')
+    parser.add_argument('-n', '--name_json_file', type=str, default='data.json', help='Name of the json file to save.')
+    parser.add_argument('--prop_valid', type=float, default=0.15, help='Number of test validation images')
+    parser.add_argument('-j', '--json_name', type=str, default='data.json', help='Name for saving the json file')
+
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    prepare_data(data_path=args.data_path)
+    prepare_data(datasets=DATASETS, data_path=args.data_path, proportion_test_images=args.prop_valid,
+                 json_name=args.json_name)
