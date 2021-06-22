@@ -1,15 +1,15 @@
 import time
 import argparse
-from tqdm import tqdm
 
 import cv2
 import numpy as np
 import tensorflow as tf
 import segmentation_models as sm
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from config import INPUT_SHAPE_IMAGE
-from src import build_model
-from src import DataGenerator
+from src import DataGenerator, build_model
 
 
 def preparing_frame(image: np.ndarray, model) -> np.ndarray:
@@ -62,6 +62,34 @@ def visualization() -> None:
     cv2.destroyAllWindows()
 
 
+def show_batch(data_path: str):
+    """
+    This function shows image and masks.
+    """
+    data_show = DataGenerator(data_path)
+
+    for i in range(len(data_show)):
+        batch = data_show[i]
+
+        images, masks = batch[0], batch[1]
+        fontsize = 8
+        for n, j in enumerate(images):
+            mask_background = masks[n, :, :, -1]
+            mask_object = masks[n, :, :, 0]
+            plt.figure(figsize=[10, 10])
+            f, ax = plt.subplots(3, 1)
+            ax[0].imshow(j)
+            ax[0].set_title('Original image', fontsize=fontsize)
+            ax[1].imshow(mask_object)
+            ax[1].set_title('Mask dog or cat', fontsize=fontsize)
+            ax[2].imshow(mask_background)
+            ax[2].set_title('Mask background', fontsize=fontsize)
+            if plt.waitforbuttonpress(0):
+                plt.close('all')
+                raise SystemExit
+            plt.close()
+
+
 def test_metrics_and_time(mode: str) -> None:
     """
     This function calculates the average value of loss and metrics as well as inference time and average fps.
@@ -106,22 +134,33 @@ def parse_args() -> argparse.Namespace:
                                                                'metrics on the validation dataset will be calculated.')
     parser.add_argument('--time', action='store_true', help='If the value is True, then the inference time and the '
                                                             'average fps on the validation dataset will be calculated.')
-    parser.add_argument('--gpu', action='store_true', help='If True, then the gpu is used for the test.')
+    parser.add_argument('--gpu', type=str, default='_', help='If you want to use the GPU, you must specify the number '
+                                                             'of the video card that you want to use.')
     parser.add_argument('--data_path', type=str, default='data', help='path to Dataset where there is a json file')
     parser.add_argument('--json_name', type=str, default='data.json', help='path to Dataset where there is a json file')
+    parser.add_argument('--batch', action='store_true', help='If True, the screen will display batches '
+                                                             'from data_generator.')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    if args.gpu is True:
-        devices = tf.config.experimental.list_physical_devices('GPU')
-        tf.config.experimental.set_memory_growth(devices[0], True)
+    if args.gpu != '_':
+        gpus_list = [int(args.gpu)]
+    else:
+        gpus_list = []
+    devices = tf.config.get_visible_devices('GPU')
+    devices = [devices[i] for i in gpus_list]
+    tf.config.set_visible_devices(devices, 'GPU')
+    for gpu in devices:
+        tf.config.experimental.set_memory_growth(gpu, True)
 
-    if args.test_on_video is True:
+    if args.test_on_video:
         visualization()
-    if args.metrics is True:
+    if args.metrics:
         test_metrics_and_time('metrics')
-    if args.time is True:
+    if args.time:
         test_metrics_and_time('time')
+    if args.batch:
+        show_batch(args.data_path)
