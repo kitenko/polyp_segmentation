@@ -11,7 +11,7 @@ MASKS_PATH = 'masks'
 DATASETS = ['CVC-300', 'CVC-612', 'CVC-ClinicDB', 'HyperKvasir']
 
 LEARNING_RATE = 0.0001
-BACKBONE = 'resnet18'
+BACKBONE = 'efficientnetb0'
 ENCODER_WEIGHTS = 'imagenet'
 OUTPUT_ACTIVATION = 'softmax'
 LAYER_ACTIVATION = 'relu'
