@@ -28,14 +28,14 @@ def preparing_frame(image: np.ndarray, model) -> np.ndarray:
     return image
 
 
-def visualization() -> None:
+def visualization(weights: str, path_video: str) -> None:
     """
     This function captures video and resizes the image.
     """
     model = build_model()
-    model.load_weights(args.weights)
+    model.load_weights(weights)
 
-    cap = cv2.VideoCapture(args.path_video)
+    cap = cv2.VideoCapture(path_video)
 
     if not cap.isOpened():
         print("Error opening video stream or file")
@@ -128,8 +128,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser('script for model testing.')
     parser.add_argument('--weights', type=str, default=None, help='Path for loading model weights.')
     parser.add_argument('--path_video', type=str, default=None, help='Path for loading video for test.')
-    parser.add_argument('--test_on_video', action='store_true', help='If the value is True, then the webcam will be '
-                                                                     'used for the test.')
     parser.add_argument('--metrics', action='store_true', help='If the value is True, then the average '
                                                                'metrics on the validation dataset will be calculated.')
     parser.add_argument('--time', action='store_true', help='If the value is True, then the inference time and the '
@@ -156,8 +154,8 @@ if __name__ == '__main__':
     for gpu in devices:
         tf.config.experimental.set_memory_growth(gpu, True)
 
-    if args.test_on_video:
-        visualization()
+    if args.path_video is not None:
+        visualization(weights=args.weights, path_video=args.path_video)
     if args.metrics:
         test_metrics_and_time('metrics')
     if args.time:
