@@ -23,26 +23,42 @@ data/
             cju0qoxqj9q6s0835b43399p4.jpg
             ...
 ``` 
-Run this script to prepare dataset for training and testing:
+Run this script to prepare dataset for training and testing with default settings:
+
 ```shell script
 python data_preparation.py
 ```
 ## 2. Training
 Run training script with default parameters:
 ```shell script
-python train.py
+python train.py --train
+```
+If you want to make a training with a different input resolution, then you can use:
+```shell script
+python train.py --train_dif_shape
 ```
 ## 3. Plotting graphs
 If you want to build graphs from saved logs, you can use tens or board by passing the path to the logs folder.
 ```shell script
-tensorboard --logdir models_data/tensorboard_logs/Unet_imagenet_2021-05-19_00-20-00_False
+tensorboard --logdir models_data/Unet_resnet18_2021-06-05_15-53-19_shape-256-256/logs
 ```
 ## 4. Testing
-You can test the model using a webcam.
-For visualization, you need to pass two arguments "--weights ". In the output image, you will see the segmentation 
-mask.
+You can test the trained model on video.
+For the video test, you will need two arguments "--weights " and "'--path_video". 
 ```shell script
-python test.py --weights save_models/Unetresnet18imagenet/Unetresnet18.h5 --path_video test_video/vid_2.avi
+ python test.py --path_video /data/test_video/vid_2.avi  --weights models_data/Unet_resnet18_2021-06-12_16-34-59_shape-256-256/save_models/Unetresnet18.h5
+```
+If you want to calculate the average value of losses and indicators on val_data, you should use --metrics and --weights.
+```shell script
+python test.py --metrics --weights models_data/Unet_resnet18_2021-06-12_16-34-59_shape-256-256/save_models/Unetresnet18.h5
+```
+If you want to calculate the average inference time and average fps and indicators on val_data, you should use --time and --weights.
+```shell script
+python test.py --time --weights models_data/Unet_resnet18_2021-06-12_16-34-59_shape-256-256/save_models/Unetresnet18.h5
+```
+If you want to use gpu for test, you should use --gpu with number gpu. If you don't want to use the gpu then you don't need to specify this parameter.
+```shell script
+python test.py --gpu 0 test.py --path_video /data/test_video/vid_2.avi  --weights models_data/Unet_resnet18_2021-06-12_16-34-59_shape-256-256/save_models/Unetresnet18.h
 ```
 Image segmentation, example.
  
